@@ -1,0 +1,119 @@
+#!/usr/bin/php
+<?php
+if (!empty($argv[1])) {
+  $year_month = preg_replace('/[^0-9]/', '', $argv[1]);
+}
+if (empty($year_month)) {
+  $year_month = date('Ym');
+}
+
+$log_base = $_SERVER['HOME'] . '/logs/git-commits.';
+$log_path = $log_base . $year_month . '.log';
+if (!$fp = @fopen($log_path, 'r')) {
+  print "Unable to open commit log file at {$log_path}\n";
+  exit(1);
+}
+
+$max_project_name_length = 5;
+$max_commits = 0;
+$data_by_date = [];
+$data_by_project = [];
+$total_commits = [
+  'all_projects' => 0,
+];
+
+while (($result = fgetcsv($fp)) !== FALSE) {
+  $date = $result[1] ?? '';
+  $project = $result[3] ?? '';
+  if (!$date || !$project) {
+    continue;
+  }
+  if (empty($total_commits[$date])) {
+    $total_commits[$date] = 0;
+  }
+  if (empty($data_by_project[$project])) {
+    $parts = explode('/', $project);
+    $project_short = $parts[count($parts) - 1];
+    if (strlen($project_short) > $max_project_name_length) {
+      $max_project_name_length = strlen($project_short);
+    }
+    $data_by_project[$project] = [
+      'count' => 0,
+      'short_name' => $project_short,
+    ];
+  }
+  if (empty($data_by_date[$date][$project])) {
+    $data_by_date[$date][$project] = [
+      'count' => 0,
+      'short_name' => $data_by_project[$project]['short_name'],
+    ];
+  }
+  $data_by_project[$project]['count']++;
+  $data_by_date[$date][$project]['count']++;
+  $total_commits[$date]++;
+  $total_commits['all_projects']++;
+  if ($total_commits[$date] > $max_commits) {
+    $max_commits = $total_commits[$date];
+  }
+} // Loop thru lines.
+fclose($fp);
+
+if (!$data_by_date) {
+  print "No commit data found.\n";
+  exit(0);
+}
+
+ksort($data_by_date);
+$header = "+-" . str_repeat('-', $max_project_name_length) . "-+-" . str_repeat('-', strlen($max_commits)) . "-+\n";
+
+foreach ($data_by_date as $date => $projects) {
+  ksort($projects);
+  $timestamp = strtotime($date . ' 12:00:00');
+  print date('l, j F Y', $timestamp) . "\n";
+  print $header;
+  foreach ($projects as $project => $info) {
+    print "| "
+      . substr($info['short_name'] . str_repeat(' ', $max_project_name_length + 1), 0, $max_project_name_length + 1)
+      . "| "
+      . substr(str_repeat(' ', strlen($max_commits)) . $info['count'], -1 * strlen($max_commits))
+      . " |\n";
+  }
+  print $header;
+  if (count($projects) > 1) {
+    print "| "
+      . substr("Total" . str_repeat(' ', $max_project_name_length + 1), 0, $max_project_name_length + 1)
+      . "| "
+      . substr(str_repeat(' ', strlen($max_commits)) . $total_commits[$date], -1 * strlen($max_commits))
+      . " |\n";
+    print $header;
+  }
+  print "\n";
+
+} // Loop thru by-date data.
+
+ksort($data_by_date);
+
+print "\nTotals by project\n";
+$header = "+-" . str_repeat('-', $max_project_name_length) . "-+-" . str_repeat('-', strlen($total_commits['all_projects'])) . "-+\n";
+print $header;
+
+foreach ($data_by_project as $project => $info) {
+  $total = 0;
+  $total+= $info['count'];
+  print "| "
+    . substr($info['short_name'] . str_repeat(' ', $max_project_name_length + 1), 0, $max_project_name_length + 1)
+    . "| "
+    . substr(str_repeat(' ', strlen($total_commits['all_projects'])) . $info['count'], -1 * strlen($total_commits['all_projects']))
+    . " |\n";
+} // Loop thru by-project data.
+if (count($data_by_project) > 1) {
+  print $header;
+  print "| "
+    . substr("Total" . str_repeat(' ', $max_project_name_length + 1), 0, $max_project_name_length + 1)
+    . "| "
+    . substr(str_repeat(' ', strlen($total_commits['all_projects'])) . $total_commits['all_projects'], -1 * strlen($total_commits['all_projects']))
+    . " |\n";
+
+}
+print $header;
+print "\n";

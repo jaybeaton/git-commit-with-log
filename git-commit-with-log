@@ -1,0 +1,21 @@
+#!/bin/bash
+
+GITBIN=$(which git);
+YEARMONTH=$(date +%Y%m);
+DATE=$(date +%Y%m%d);
+TIME=$(date +%H%M);
+DATETIME=$(date +%Y%m%dT%H%M);
+LOGFILE="${HOME}/logs/git-commits.${YEARMONTH}.log";
+
+function log_git_location {
+  GIT_LOCATION="$(pwd)"; while [ "$GIT_LOCATION" != "/" ]; do if [ -e "${GIT_LOCATION}/.git" ]; then break; fi; GIT_LOCATION="$(dirname "$GIT_LOCATION")"; done
+  if [ "$GIT_LOCATION" = "/" ]; then
+    GIT_LOCATION='';
+  fi
+  echo "${DATETIME},${DATE},${TIME},$GIT_LOCATION" >> $LOGFILE
+}
+
+if [ "$1" = "commit" ]; then
+  log_git_location;
+fi
+$GITBIN "${@}";
