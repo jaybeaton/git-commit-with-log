@@ -91,7 +91,7 @@ foreach ($data_by_date as $date => $projects) {
 
 } // Loop thru by-date data.
 
-ksort($data_by_date);
+ksort($data_by_project);
 
 print "\nTotals by project\n";
 $header = "+-" . str_repeat('-', $max_project_name_length) . "-+-" . str_repeat('-', strlen($total_commits['all_projects'])) . "-+\n";
