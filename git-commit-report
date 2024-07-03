@@ -23,8 +23,8 @@ $total_commits = [
 ];
 
 while (($result = fgetcsv($fp)) !== FALSE) {
-  $date = $result[1] ?? '';
-  $project = $result[3] ?? '';
+  $date = (!empty($result[0])) ? substr($result[0], 0, 8) :  '';
+  $project = $result[1] ?? '';
   if (!$date || !$project) {
     continue;
   }
