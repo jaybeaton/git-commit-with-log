@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Options for using this version:
+# 1. Put this script in each Git repository in its
+# .git/hooks directory.
+# 2. Put this script in Git's global installed template directory:
+# /usr/share/git-core/templates/hooks/
+# Then, this hook will be added to each repo by running `git init`.
+
+YEARMONTH=$(date +%Y%m);
+LOGFILE="${HOME}/logs/git-commits.${YEARMONTH}.log";
+DATETIME=$(date +%Y%m%dT%H%M);
+# Find the current path in Git.
+GIT_LOCATION=$(git rev-parse --show-superproject-working-tree --show-toplevel)
+# Log the commit.
+echo "${DATETIME},${GIT_LOCATION}" >> $LOGFILE
