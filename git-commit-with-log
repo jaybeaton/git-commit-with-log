@@ -1,13 +1,11 @@
 #!/bin/bash
 
-GITBIN=$(type -P git);
-
 if [ "$1" = "commit" ]; then
   YEARMONTH=$(date +%Y%m);
   LOGFILE="${HOME}/logs/git-commits.${YEARMONTH}.log";
   DATETIME=$(date +%Y%m%dT%H%M);
-  GIT_LOCATION=$(${GITBIN} rev-parse --show-superproject-working-tree --show-toplevel)
+  GIT_LOCATION=$(git rev-parse --show-superproject-working-tree --show-toplevel)
   echo "${DATETIME},$GIT_LOCATION" >> $LOGFILE
 fi
 
-$GITBIN "${@}";
+git "${@}";
